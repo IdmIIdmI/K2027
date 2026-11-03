@@ -1,0 +1,1153 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#173b55">
+<title>MISI KASIH SAYANG</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#173b55;touch-action:none}
+button,input{font:inherit}
+button{cursor:pointer;border:0}
+#gameCanvas{position:absolute;width:100%;height:100%;inset:0;display:none}
+.screen{
+ position:absolute;inset:0;z-index:5;display:flex;align-items:center;
+ justify-content:center;padding:18px;background:linear-gradient(145deg,#163b55,#267b75);
+ color:#fff;overflow:auto
+}
+.panel{
+ width:min(430px,100%);padding:25px;border-radius:25px;
+ background:rgba(255,255,255,.96);color:#244052;
+ box-shadow:0 15px 50px #071e3470;text-align:center
+}
+.logo{font-size:clamp(25px,6vw,38px);font-weight:1000;color:#167c72;line-height:1.15}
+.subtitle{font-size:13px;color:#68818b;margin:9px 0 20px}
+.field{text-align:left;margin:12px 0}
+.field label{font-size:12px;font-weight:bold;color:#47616d}
+.field input{
+ width:100%;padding:14px;margin-top:6px;border:2px solid #dce8e7;
+ border-radius:12px;outline:none;color:#193d4b;background:#fff
+}
+.field input:focus{border-color:#25a58c}
+.primary{
+ width:100%;padding:14px;border-radius:13px;background:#168b72;
+ color:white;font-weight:900;margin-top:9px
+}
+.secondary{
+ width:100%;padding:12px;border-radius:13px;background:#e7f3ef;
+ color:#216653;font-weight:800;margin-top:8px
+}
+.small{font-size:11px;color:#77909a;margin-top:14px;line-height:1.5}
+.hidden{display:none!important}
+#adminPanel{max-height:90vh;overflow:auto}
+.accountList{text-align:left;font-size:12px;background:#edf5f3;border-radius:12px;padding:10px;margin-top:12px}
+#characterScreen{background:linear-gradient(145deg,#163b55,#347d6e)}
+.characterPanel{width:min(800px,100%);text-align:center}
+.characterGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.character{
+ border:3px solid transparent;border-radius:18px;background:#fff;color:#244052;
+ padding:10px;min-width:0
+}
+.character.selected{border-color:#ffbd45;transform:translateY(-4px)}
+.character canvas{width:100%;height:150px;background:linear-gradient(#bdece0,#f2e6b7);border-radius:12px}
+.character strong{display:block;margin:8px 0 3px}
+.character small{color:#68818b}
+#hud{
+ position:absolute;z-index:3;top:10px;left:10px;right:10px;
+ display:none;justify-content:space-between;align-items:flex-start;
+ pointer-events:none;color:white;text-shadow:0 2px 4px #143
+}
+.hudbox{background:#143c4edb;border:1px solid #ffffff55;border-radius:14px;padding:9px 13px;font-weight:bold;font-size:13px}
+#missionName{font-size:12px;margin-top:4px;color:#ffdf93}
+#controls{position:absolute;inset:0;z-index:4;display:none;pointer-events:none}
+#joystick{
+ position:absolute;left:22px;bottom:25px;width:130px;height:130px;
+ border-radius:50%;background:#173b5577;border:3px solid #ffffff99;
+ pointer-events:auto;touch-action:none
+}
+#stick{
+ position:absolute;width:53px;height:53px;border-radius:50%;left:35px;top:35px;
+ background:linear-gradient(145deg,#fff,#b8eee0);border:3px solid #238b79;
+ box-shadow:0 4px 12px #1238
+}
+.controlBtn{
+ position:absolute;right:25px;border-radius:50%;width:70px;height:70px;
+ background:linear-gradient(145deg,#fff,#c9f0e4);border:3px solid #238b79;
+ color:#176b60;font-size:13px;font-weight:1000;pointer-events:auto;
+ box-shadow:0 5px 12px #1238;touch-action:none
+}
+#jumpBtn{bottom:35px}
+#actionBtn{bottom:118px;right:105px;width:76px;height:76px;background:linear-gradient(145deg,#ffeab2,#ffbd55);border-color:#d38a20;color:#714b13}
+#saveBtn{
+ position:absolute;top:75px;right:10px;z-index:4;display:none;
+ background:#fff;color:#245c54;border-radius:10px;padding:9px 12px;
+ font-weight:bold;font-size:12px
+}
+#message{
+ position:absolute;z-index:6;top:23%;left:50%;transform:translateX(-50%);
+ width:min(360px,88%);background:#fff;color:#244052;border-radius:18px;
+ padding:17px;text-align:center;box-shadow:0 10px 35px #102c4566;
+ display:none
+}
+#message button{background:#168b72;color:white;padding:12px 22px;border-radius:12px;font-weight:bold;margin-top:10px}
+#toast{
+ position:absolute;z-index:8;left:50%;bottom:180px;transform:translateX(-50%);
+ padding:10px 16px;background:#143c4ee8;color:white;border-radius:20px;
+ font-size:13px;display:none;text-align:center;max-width:85%
+}
+#endScreen{background:linear-gradient(145deg,#164d55,#805a9d)}
+@media(max-width:500px){
+ .panel{padding:20px}
+ #joystick{width:116px;height:116px;left:15px;bottom:18px}
+ #stick{left:29px;top:29px}
+ .controlBtn{right:15px;width:65px;height:65px}
+ #actionBtn{right:88px;width:70px;height:70px}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- LOG MASUK -->
+<div class="screen" id="loginScreen">
+ <div class="panel">
+  <div style="font-size:42px">🌿 💛 🌿</div>
+  <div class="logo">MISI<br>KASIH SAYANG</div>
+  <div class="subtitle">Pengembaraan kecil, kebaikan besar</div>
+
+  <div id="loginPanel">
+   <div class="field">
+    <label>ID PEMAIN</label>
+    <input id="loginId" placeholder="Masukkan ID pemain" autocomplete="username">
+   </div>
+   <div class="field">
+    <label>KATA LALUAN</label>
+    <input id="loginPass" type="password" placeholder="Masukkan kata laluan" autocomplete="current-password">
+   </div>
+   <button class="primary" onclick="login()">MASUK KE PERMAINAN</button>
+   <button class="secondary" onclick="showAdmin()">PENGURUSAN GURU</button>
+   <div class="small">Akaun pemain diwujudkan oleh guru atau pentadbir.</div>
+  </div>
+
+  <div id="adminPanel" class="hidden">
+   <h3>👩‍🏫 PENGURUSAN GURU</h3>
+   <div class="field">
+    <label>ID GURU</label>
+    <input id="adminId" placeholder="ID guru">
+   </div>
+   <div class="field">
+    <label>KATA LALUAN GURU</label>
+    <input id="adminPass" type="password" placeholder="Kata laluan guru">
+   </div>
+   <button class="primary" onclick="adminLogin()">LOG MASUK GURU</button>
+   <div id="createArea" class="hidden">
+    <hr>
+    <h3>CIPTA AKAUN PEMAIN</h3>
+    <div class="field">
+     <label>ID PEMAIN BAHARU</label>
+     <input id="newId" placeholder="Contoh: MURID001">
+    </div>
+    <div class="field">
+     <label>KATA LALUAN BAHARU</label>
+     <input id="newPass" type="password" placeholder="Minimum 4 aksara">
+    </div>
+    <button class="primary" onclick="createPlayer()">CIPTA AKAUN</button>
+    <div id="accountList" class="accountList">Belum ada akaun pemain.</div>
+   </div>
+   <button class="secondary" onclick="hideAdmin()">KEMBALI</button>
+   <div class="small">Akses guru permulaan: GURU / KASIH2026. Tukar maklumat ini dalam kod sebelum permainan digunakan secara rasmi.</div>
+  </div>
+ </div>
+</div>
+
+<!-- PILIH WATAK -->
+<div class="screen hidden" id="characterScreen">
+ <div class="panel characterPanel">
+  <div class="logo">PILIH WATAK</div>
+  <p>Pilih seorang sahabat untuk menemani pengembaraanmu.</p>
+  <div class="characterGrid">
+   <button class="character selected" onclick="selectCharacter(0,this)">
+    <canvas id="char0" width="180" height="180"></canvas>
+    <strong>AMIR</strong><small>Jubah</small>
+   </button>
+   <button class="character" onclick="selectCharacter(1,this)">
+    <canvas id="char1" width="180" height="180"></canvas>
+    <strong>HAFIZ</strong><small>Baju Melayu</small>
+   </button>
+   <button class="character" onclick="selectCharacter(2,this)">
+    <canvas id="char2" width="180" height="180"></canvas>
+    <strong>RAYYAN</strong><small>Kurta</small>
+   </button>
+  </div>
+  <button class="primary" onclick="startGame()">MULA PENGEMBARAAN</button>
+ </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+ <div class="hudbox">
+  <div id="lives">❤️ ❤️ ❤️</div>
+  <div id="missionName">Misi 1</div>
+ </div>
+ <div class="hudbox">
+  <div id="score">💎 0 / 500</div>
+  <div id="playerLabel">Pemain</div>
+ </div>
+</div>
+
+<button id="saveBtn" onclick="manualSave()">💾 SIMPAN</button>
+
+<!-- KAWALAN -->
+<div id="controls">
+ <div id="joystick"><div id="stick"></div></div>
+ <button class="controlBtn" id="jumpBtn">LOMPAT</button>
+ <button class="controlBtn" id="actionBtn">TINDAKAN</button>
+</div>
+
+<div id="message">
+ <div id="messageEmoji" style="font-size:38px">🌟</div>
+ <h2 id="messageTitle">Tahniah!</h2>
+ <p id="messageText">Misi berjaya.</p>
+ <button id="messageButton" onclick="continueMission()">TERUSKAN</button>
+</div>
+
+<div id="toast"></div>
+
+<!-- TAMAT -->
+<div class="screen hidden" id="endScreen">
+ <div class="panel">
+  <div style="font-size:55px">🎉 🏆 🎉</div>
+  <div class="logo">TAHNIAH!</div>
+  <h2>Pengembaraan Kasih Sayang Selesai!</h2>
+  <p>Kamu telah menyelesaikan lima misi kebaikan.</p>
+  <div style="font-size:30px;color:#168b72;font-weight:1000" id="finalScore">500 / 500</div>
+  <p>Teruskan menjadi insan yang suka membantu.</p>
+  <button class="primary" onclick="backToLogin()">KEMBALI KE HALAMAN UTAMA</button>
+ </div>
+</div>
+
+<script>
+/* ==========================================
+   MISI KASIH SAYANG
+   Versi 1 - HTML tunggal
+   ========================================== */
+
+/* TETAPAN GURU */
+const MASTER_ID = "GURU";
+const MASTER_PASSWORD = "KASIH2026";
+
+/* DATA AKAUN SETEMPAT */
+const ACCOUNT_KEY = "MKS_ACCOUNTS_V1";
+const SAVE_KEY = "MKS_SAVE_";
+
+let accounts = JSON.parse(localStorage.getItem(ACCOUNT_KEY) || "{}");
+let currentUser = "";
+let selectedCharacter = 0;
+let gameStarted = false;
+let mission = 0;
+let score = 0;
+let lives = 3;
+let missionStep = 0;
+let player = {x:90,y:420,vy:0,ground:true};
+let cameraX = 0;
+let escortStarted = false;
+let hasSandal = false;
+let hasWater = false;
+let invulnerable = 0;
+let completed = [];
+let joystick = {x:0,y:0};
+let jumpPressed = false;
+let audioContext = null;
+let musicTimer = null;
+let musicGain = null;
+let speechBusy = false;
+let lastFrame = 0;
+
+const missions = [
+ {name:"Sahabat Dalam Kesusahan",instruction:"Mari kita bantu sahabat yang terjatuh daripada basikal."},
+ {name:"Si Comel Di Atas Pokok",instruction:"Seekor kucing berada di atas pokok. Mari kita selamatkannya."},
+ {name:"Selipar Yang Hilang",instruction:"Sahabat kita kehilangan seliparnya. Mari kita cari."},
+ {name:"Membantu Warga Emas",instruction:"Mari kita bantu warga emas melintas jalan dengan selamat."},
+ {name:"Seteguk Air Buat Si Comel",instruction:"Anjing ini dahaga. Mari kita carikan air untuknya."}
+];
+
+const worldWidth = 5000;
+const groundY = 420;
+const stageStart = i => i*1000;
+const stageEnd = i => (i+1)*1000;
+
+/* AKAUN */
+function saveAccounts(){
+ localStorage.setItem(ACCOUNT_KEY,JSON.stringify(accounts));
+}
+
+function showAdmin(){
+ document.getElementById("loginPanel").classList.add("hidden");
+ document.getElementById("adminPanel").classList.remove("hidden");
+}
+
+function hideAdmin(){
+ document.getElementById("adminPanel").classList.add("hidden");
+ document.getElementById("loginPanel").classList.remove("hidden");
+}
+
+function adminLogin(){
+ const id=document.getElementById("adminId").value.trim();
+ const pass=document.getElementById("adminPass").value;
+ if(id!==MASTER_ID || pass!==MASTER_PASSWORD){
+  alert("ID atau kata laluan guru tidak betul.");
+  return;
+ }
+ document.getElementById("createArea").classList.remove("hidden");
+ refreshAccounts();
+}
+
+function refreshAccounts(){
+ const list=document.getElementById("accountList");
+ const ids=Object.keys(accounts);
+ list.innerHTML=ids.length
+  ? "<b>Senarai akaun pemain:</b><br>"+ids.map(x=>"• "+escapeHTML(x)).join("<br>")
+  : "Belum ada akaun pemain.";
+}
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function createPlayer(){
+ const id=document.getElementById("newId").value.trim();
+ const pass=document.getElementById("newPass").value;
+ if(!id || pass.length<4){
+  alert("Masukkan ID dan kata laluan sekurang-kurangnya 4 aksara.");
+  return;
+ }
+ if(id.toUpperCase()===MASTER_ID || accounts[id]){
+  alert("ID ini sudah digunakan.");
+  return;
+ }
+ accounts[id]={password:pass};
+ saveAccounts();
+ document.getElementById("newId").value="";
+ document.getElementById("newPass").value="";
+ refreshAccounts();
+ alert("Akaun pemain berjaya dicipta.");
+}
+
+function login(){
+ const id=document.getElementById("loginId").value.trim();
+ const pass=document.getElementById("loginPass").value;
+ if(!accounts[id] || accounts[id].password!==pass){
+  alert("ID atau kata laluan tidak betul. Sila hubungi guru.");
+  return;
+ }
+ currentUser=id;
+ loadSave();
+ document.getElementById("loginScreen").classList.add("hidden");
+ document.getElementById("characterScreen").classList.remove("hidden");
+ drawCharacterPreviews();
+ startMusic();
+}
+
+function backToLogin(){
+ document.getElementById("endScreen").classList.add("hidden");
+ document.getElementById("loginScreen").classList.remove("hidden");
+ document.getElementById("hud").style.display="none";
+ document.getElementById("controls").style.display="none";
+ document.getElementById("saveBtn").style.display="none";
+ document.getElementById("gameCanvas").style.display="none";
+ gameStarted=false;
+}
+
+/* SIMPANAN MANUAL */
+function loadSave(){
+ const data=localStorage.getItem(SAVE_KEY+currentUser);
+ if(!data){
+  mission=0;score=0;completed=[];
+  selectedCharacter=0;
+  return;
+ }
+ try{
+  const s=JSON.parse(data);
+  mission=Math.min(4,Math.max(0,s.mission||0));
+  score=Math.min(500,Math.max(0,s.score||0));
+  completed=Array.isArray(s.completed)?s.completed:[];
+  selectedCharacter=s.character||0;
+ }catch(e){
+  mission=0;score=0;completed=[];
+ }
+}
+
+function manualSave(){
+ if(!currentUser)return;
+ const data={
+  mission,score,completed,character:selectedCharacter,
+  savedAt:new Date().toISOString()
+ };
+ localStorage.setItem(SAVE_KEY+currentUser,JSON.stringify(data));
+ toast("Kemajuan berjaya disimpan pada peranti ini.");
+}
+
+/* AUDIO */
+function startMusic(){
+ try{
+  if(!audioContext){
+   audioContext=new (window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioContext.state==="suspended")audioContext.resume();
+  if(musicTimer)return;
+  musicGain=audioContext.createGain();
+  musicGain.gain.value=0.035;
+  musicGain.connect(audioContext.destination);
+  const notes=[523,659,784,659,587,698,784,698,523,587,659,587];
+  let n=0;
+  musicTimer=setInterval(()=>{
+   if(!audioContext)return;
+   const osc=audioContext.createOscillator();
+   const gain=audioContext.createGain();
+   osc.type="sine";
+   osc.frequency.value=notes[n++%notes.length];
+   gain.gain.setValueAtTime(0.0001,audioContext.currentTime);
+   gain.gain.exponentialRampToValueAtTime(0.17,audioContext.currentTime+0.04);
+   gain.gain.exponentialRampToValueAtTime(0.0001,audioContext.currentTime+0.32);
+   osc.connect(gain);gain.connect(musicGain);
+   osc.start();osc.stop(audioContext.currentTime+0.34);
+  },390);
+ }catch(e){}
+}
+
+function speak(text){
+ if(!("speechSynthesis" in window)){
+  toast(text);
+  return;
+ }
+ speechSynthesis.cancel();
+ speechBusy=true;
+ if(musicGain && audioContext){
+  musicGain.gain.setTargetAtTime(0.008,audioContext.currentTime,0.15);
+ }
+ const utter=new SpeechSynthesisUtterance(text);
+ utter.lang="ms-MY";
+ utter.rate=0.88;
+ utter.pitch=1.05;
+ utter.volume=1;
+ const voices=speechSynthesis.getVoices();
+ const voice=voices.find(v=>v.lang.toLowerCase().startsWith("ms"))||
+             voices.find(v=>v.lang.toLowerCase().startsWith("id"));
+ if(voice)utter.voice=voice;
+ utter.onend=()=>{
+  speechBusy=false;
+  if(musicGain && audioContext)
+   musicGain.gain.setTargetAtTime(0.035,audioContext.currentTime,0.4);
+ };
+ speechSynthesis.speak(utter);
+}
+
+function soundSuccess(){
+ if(!audioContext)return;
+ [523,659,784,1046].forEach((f,i)=>{
+  const o=audioContext.createOscillator();
+  const g=audioContext.createGain();
+  o.frequency.value=f;
+  g.gain.setValueAtTime(0.12,audioContext.currentTime+i*.12);
+  g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+i*.12+.25);
+  o.connect(g);g.connect(audioContext.destination);
+  o.start(audioContext.currentTime+i*.12);
+  o.stop(audioContext.currentTime+i*.12+.27);
+ });
+}
+
+/* WATAK */
+const outfits=[
+ {body:"#f5f3e8",trim:"#b4a46d",skin:"#c98258"},
+ {body:"#287eae",trim:"#e9d28e",skin:"#bd805b"},
+ {body:"#438d70",trim:"#f0d5a0",skin:"#c98258"}
+];
+
+function drawCharacter(ctx,x,y,index,scale=1,face=1){
+ const o=outfits[index]||outfits[0];
+ ctx.save();
+ ctx.translate(x,y);
+ ctx.scale(scale,scale);
+ ctx.scale(face,1);
+
+ // bayang
+ ctx.fillStyle="#244c3d55";
+ ctx.beginPath();ctx.ellipse(0,0,24,6,0,0,Math.PI*2);ctx.fill();
+
+ // kaki
+ ctx.fillStyle="#263b4d";
+ ctx.fillRect(-13,-28,10,27);
+ ctx.fillRect(4,-28,10,27);
+ ctx.fillStyle="#f4eee0";
+ ctx.fillRect(-16,-5,16,6);
+ ctx.fillRect(2,-5,16,6);
+
+ // badan/pakaian
+ ctx.fillStyle=o.body;
+ ctx.beginPath();
+ ctx.moveTo(-18,-77);ctx.lineTo(18,-77);
+ ctx.lineTo(22,-29);ctx.lineTo(-22,-29);ctx.closePath();ctx.fill();
+ ctx.strokeStyle=o.trim;ctx.lineWidth=3;ctx.stroke();
+
+ // tangan
+ ctx.strokeStyle=o.body;ctx.lineWidth=8;ctx.lineCap="round";
+ ctx.beginPath();ctx.moveTo(-16,-70);ctx.lineTo(-25,-43);
+ ctx.moveTo(16,-70);ctx.lineTo(25,-43);ctx.stroke();
+
+ // leher dan muka
+ ctx.fillStyle=o.skin;ctx.fillRect(-5,-88,10,12);
+ ctx.beginPath();ctx.arc(0,-103,19,0,Math.PI*2);ctx.fill();
+
+ // rambut / kopiah kecil
+ ctx.fillStyle="#263c42";
+ ctx.beginPath();ctx.arc(0,-112,17,Math.PI,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#fff";
+ ctx.beginPath();ctx.roundRect(-12,-124,24,6,3);ctx.fill();
+
+ // mata
+ ctx.fillStyle="#253943";
+ ctx.beginPath();ctx.arc(-7,-103,2,0,Math.PI*2);
+ ctx.arc(7,-103,2,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#9c4d48";ctx.lineWidth=1.5;
+ ctx.beginPath();ctx.arc(0,-96,5,.2,Math.PI-.2);ctx.stroke();
+
+ ctx.restore();
+}
+
+function drawCharacterPreviews(){
+ for(let i=0;i<3;i++){
+  const c=document.getElementById("char"+i);
+  const ctx=c.getContext("2d");
+  ctx.clearRect(0,0,180,180);
+  ctx.fillStyle="#d7f1e7";ctx.fillRect(0,0,180,180);
+  ctx.fillStyle="#8bc99e";ctx.fillRect(0,145,180,35);
+  drawCharacter(ctx,90,150,i,1.15,1);
+ }
+}
+
+function selectCharacter(i,el){
+ selectedCharacter=i;
+ document.querySelectorAll(".character").forEach(x=>x.classList.remove("selected"));
+ el.classList.add("selected");
+}
+
+/* MULA PERMAINAN */
+function startGame(){
+ document.getElementById("characterScreen").classList.add("hidden");
+ document.getElementById("gameCanvas").style.display="block";
+ document.getElementById("hud").style.display="flex";
+ document.getElementById("controls").style.display="block";
+ document.getElementById("saveBtn").style.display="block";
+ gameStarted=true;
+ player.x=stageStart(mission)+90;
+ player.y=groundY;player.vy=0;
+ lives=3;missionStep=0;hasSandal=false;hasWater=false;
+ escortStarted=false;
+ resizeCanvas();
+ updateHUD();
+ speak("Selamat datang. "+missions[mission].instruction);
+ requestAnimationFrame(gameLoop);
+}
+
+/* CANVAS */
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
+let W=1000,H=600;
+
+function resizeCanvas(){
+ const dpr=Math.min(2,window.devicePixelRatio||1);
+ canvas.width=innerWidth*dpr;
+ canvas.height=innerHeight*dpr;
+ ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
+}
+window.addEventListener("resize",resizeCanvas);
+
+/* LUKISAN DUNIA */
+function roundedRect(c,x,y,w,h,r,color){
+ c.fillStyle=color;c.beginPath();
+ c.roundRect(x,y,w,h,r);c.fill();
+}
+
+function drawCloud(x,y,s){
+ ctx.fillStyle="#ffffffb8";
+ ctx.beginPath();
+ ctx.arc(x,y,20*s,0,Math.PI*2);
+ ctx.arc(x+24*s,y-10*s,25*s,0,Math.PI*2);
+ ctx.arc(x+48*s,y,19*s,0,Math.PI*2);
+ ctx.fill();
+}
+
+function drawTree(x,y,scale=1){
+ ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+ ctx.fillStyle="#805638";ctx.fillRect(-9,-100,18,100);
+ ctx.fillStyle="#3e986b";
+ [[0,-112,36],[-25,-88,28],[26,-87,29],[0,-72,33]].forEach(a=>{
+  ctx.beginPath();ctx.arc(a[0],a[1],a[2],0,Math.PI*2);ctx.fill();
+ });
+ ctx.restore();
+}
+
+function drawBackground(){
+ const g=ctx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,"#9de0e6");
+ g.addColorStop(.68,"#d6f1ca");
+ g.addColorStop(1,"#f8e7ad");
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+ const c=cameraX*.25;
+ for(let i=0;i<7;i++){
+  drawCloud(((i*190-c)%1250+1250)%1250-80,75+(i%3)*45,.8);
+ }
+ // bukit jauh
+ ctx.fillStyle="#8cc9a2";
+ ctx.beginPath();ctx.moveTo(0,350);
+ for(let x=0;x<=W+30;x+=30){
+  ctx.lineTo(x,300+Math.sin((x+c)*.006)*45+Math.cos((x+c)*.011)*18);
+ }
+ ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+
+ // tanah
+ ctx.fillStyle="#79b66e";ctx.fillRect(0,groundY,W,H-groundY);
+ ctx.fillStyle="#a5d47a";ctx.fillRect(0,groundY,W,12);
+
+ // bunga kecil
+ for(let i=0;i<35;i++){
+  const x=((i*91-cameraX*.75)%1050+1050)%1050;
+  ctx.fillStyle=i%2?"#ffdf72":"#fff3ef";
+  ctx.beginPath();ctx.arc(x,455+(i%4)*24,4,0,Math.PI*2);ctx.fill();
+ }
+}
+
+function worldToScreen(x){return x-cameraX}
+
+function drawVillage(){
+ const x=worldToScreen(180);
+ for(let i=0;i<4;i++){
+  const hx=x+i*260;
+  if(hx>-130&&hx<W+130){
+   roundedRect(ctx,hx,275,145,145,8,"#f6d49b");
+   ctx.fillStyle="#b75d4d";
+   ctx.beginPath();ctx.moveTo(hx-12,278);ctx.lineTo(hx+72,205);ctx.lineTo(hx+158,278);ctx.fill();
+   ctx.fillStyle="#8a654a";ctx.fillRect(hx+57,340,35,80);
+   ctx.fillStyle="#b8e3e8";ctx.fillRect(hx+15,305,32,28);
+   ctx.fillRect(hx+105,305,25,28);
+  }
+ }
+}
+
+function drawForest(){
+ for(let i=0;i<7;i++){
+  const x=worldToScreen(1050+i*170);
+  if(x>-100&&x<W+100)drawTree(x,420,1.1+(i%2)*.2);
+ }
+}
+
+function drawGarden(){
+ for(let i=0;i<16;i++){
+  const x=worldToScreen(2040+i*65);
+  ctx.fillStyle=["#f3a4b5","#f7dc73","#b7a1ed"][i%3];
+  ctx.beginPath();ctx.arc(x,390+(i%3)*13,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#3c9c65";ctx.fillRect(x-1,397,3,22);
+ }
+}
+
+function drawRoad(){
+ ctx.fillStyle="#68777a";ctx.fillRect(worldToScreen(3300),385,900,65);
+ ctx.fillStyle="#fff1b5";
+ for(let i=0;i<9;i++)ctx.fillRect(worldToScreen(3310+i*105),414,55,5);
+}
+
+function drawAnimalPark(){
+ const x=worldToScreen(4200);
+ drawTree(x+100,420,1);
+ drawTree(x+450,420,.8);
+ ctx.fillStyle="#8ad8db";
+ ctx.fillRect(x+180,405,160,18);
+}
+
+function drawWorldObjects(){
+ const sx=x=>worldToScreen(x);
+
+ if(mission===0){
+  // basikal
+  const bx=sx(620);
+  ctx.strokeStyle="#315d65";ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(bx,398,18,0,Math.PI*2);ctx.arc(bx+65,398,18,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bx,398);ctx.lineTo(bx+28,365);ctx.lineTo(bx+65,398);ctx.lineTo(bx+28,398);ctx.lineTo(bx,398);ctx.stroke();
+  drawNPC(sx(700),420,"friend");
+  drawHazard(sx(430));
+ }
+
+ if(mission===1){
+  drawTree(sx(1510),420,1.8);
+  // kucing di atas
+  drawCat(sx(1510),235);
+ }
+
+ if(mission===2){
+  // longkang
+  ctx.fillStyle="#536f76";
+  ctx.fillRect(sx(2420),407,180,18);
+  ctx.fillStyle="#9ad5d2";
+  ctx.fillRect(sx(2425),411,170,9);
+  // selipar
+  if(!hasSandal)drawSandal(sx(2500),399);
+  drawNPC(sx(2820),420,"friend");
+  drawHazard(sx(2250));
+ }
+
+ if(mission===3){
+  drawRoad();
+  drawNPC(sx(3500),420,"elder");
+  // destinasi
+  roundedRect(ctx,sx(3900)-20,350,40,70,8,"#4c9a70");
+  ctx.fillStyle="#fff";ctx.fillRect(sx(3900)-12,365,24,5);
+  // kereta bergerak
+  const carX=sx(3700+Math.sin(Date.now()/700)*55);
+  roundedRect(ctx,carX,365,90,35,10,"#e26f58");
+  ctx.fillStyle="#263e4b";
+  ctx.beginPath();ctx.arc(carX+20,401,9,0,Math.PI*2);
+  ctx.arc(carX+70,401,9,0,Math.PI*2);ctx.fill();
+ }
+
+ if(mission===4){
+  drawAnimalPark();
+  drawWell(sx(4450),420);
+  drawDog(sx(4800),420);
+  if(!hasWater)drawBucket(sx(4450)+50,405,false);
+ }
+}
+
+function drawHazard(x){
+ roundedRect(ctx,x-17,397,34,22,7,"#5d8b50");
+ for(let i=0;i<3;i++){
+  ctx.fillStyle="#3d6742";
+  ctx.beginPath();ctx.moveTo(x-12+i*12,400);ctx.lineTo(x-7+i*12,382);ctx.lineTo(x+i*12,400);ctx.fill();
+ }
+}
+
+function drawNPC(x,y,type){
+ ctx.save();ctx.translate(x,y);
+ if(type==="elder"){
+  ctx.fillStyle="#d6d2c8";
+  ctx.beginPath();ctx.arc(0,-95,18,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#9a7253";ctx.fillRect(-15,-78,30,47);
+  ctx.strokeStyle="#76583f";ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(15,-60);ctx.lineTo(25,-5);ctx.stroke();
+  ctx.fillStyle="#c9a27a";ctx.fillRect(-12,-31,9,29);ctx.fillRect(5,-31,9,29);
+ }else{
+  drawCharacter(ctx,0,y,1,.8,1);
+ }
+ ctx.restore();
+}
+
+function drawCat(x,y){
+ ctx.save();ctx.translate(x,y);
+ ctx.fillStyle="#f3a95f";
+ ctx.beginPath();ctx.arc(0,0,18,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.moveTo(-13,-12);ctx.lineTo(-16,-31);ctx.lineTo(-3,-20);
+ ctx.moveTo(13,-12);ctx.lineTo(16,-31);ctx.lineTo(3,-20);ctx.fill();
+ ctx.fillStyle="#263c42";
+ ctx.beginPath();ctx.arc(-6,-2,2,0,Math.PI*2);ctx.arc(6,-2,2,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+
+function drawSandal(x,y){
+ ctx.save();ctx.translate(x,y);ctx.rotate(-.12);
+ roundedRect(ctx,-20,-7,40,13,7,"#df8753");
+ ctx.strokeStyle="#fff0c5";ctx.lineWidth=4;
+ ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(0,3);ctx.lineTo(9,-4);ctx.stroke();
+ ctx.restore();
+}
+
+function drawWell(x,y){
+ roundedRect(ctx,x-35,y-55,70,55,9,"#b78a5a");
+ ctx.fillStyle="#65c6d0";
+ ctx.fillRect(x-28,y-43,56,12);
+ ctx.fillStyle="#805b3d";
+ ctx.fillRect(x-30,y-64,8,18);ctx.fillRect(x+22,y-64,8,18);
+ ctx.fillRect(x-35,y-69,70,7);
+}
+
+function drawBucket(x,y,full){
+ roundedRect(ctx,x-14,y-22,28,25,5,"#dfb45e");
+ ctx.strokeStyle="#886a3c";ctx.lineWidth=3;
+ ctx.beginPath();ctx.arc(x,y-17,15,Math.PI,0);ctx.stroke();
+ if(full){ctx.fillStyle="#60c6e3";ctx.fillRect(x-11,y-14,22,12);}
+}
+
+function drawDog(x,y){
+ ctx.save();ctx.translate(x,y);
+ ctx.fillStyle="#d6a36c";
+ ctx.beginPath();ctx.ellipse(0,-26,28,18,0,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.arc(22,-42,17,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.ellipse(34,-37,9,7,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#815a42";
+ ctx.beginPath();ctx.ellipse(10,-55,7,13,-.6,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.arc(27,-46,2,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#9b704a";
+ ctx.fillRect(-17,-15,8,15);ctx.fillRect(7,-15,8,15);
+ ctx.restore();
+}
+
+/* LUKISAN PERMAINAN */
+function drawGame(){
+ drawBackground();
+ const section=Math.floor(player.x/1000);
+ if(section===0)drawVillage();
+ if(section===1)drawForest();
+ if(section===2)drawGarden();
+ if(section===3)drawRoad();
+ if(section===4)drawAnimalPark();
+
+ drawWorldObjects();
+
+ // pemain
+ const px=worldToScreen(player.x);
+ drawCharacter(ctx,px,player.y,selectedCharacter,1,1);
+
+ // petunjuk interaksi
+ if(mission===0 && Math.abs(player.x-700)<130)
+  drawHint(px,player.y-150,"TEKAN TINDAKAN");
+ if(mission===1 && Math.abs(player.x-1510)<130)
+  drawHint(px,player.y-170,"NAIK DAN SELAMATKAN");
+ if(mission===2 && Math.abs(player.x-2500)<100)
+  drawHint(px,player.y-150,"CARI SELIPAR");
+ if(mission===3 && Math.abs(player.x-3500)<120)
+  drawHint(px,player.y-150,"BANTU WARGA EMAS");
+ if(mission===4 && Math.abs(player.x-4450)<120)
+  drawHint(px,player.y-150,"AMBIL AIR");
+ if(mission===4 && Math.abs(player.x-4800)<120)
+  drawHint(px,player.y-150,"BERI AIR");
+
+ // petunjuk kawalan
+ ctx.fillStyle="#173d4b99";
+ roundedRect(ctx,390,548,220,32,15,"#173d4b99");
+ ctx.fillStyle="white";ctx.font="13px Arial";ctx.textAlign="center";
+ ctx.fillText("GERAK • LOMPAT • BANTU",500,569);
+}
+
+function drawHint(x,y,text){
+ ctx.font="bold 13px Arial";
+ const w=ctx.measureText(text).width+22;
+ roundedRect(ctx,x-w/2,y-24,w,29,12,"#fff7d9");
+ ctx.fillStyle="#31584c";ctx.textAlign="center";
+ ctx.fillText(text,x,y-5);
+}
+
+/* HUD */
+function updateHUD(){
+ document.getElementById("lives").textContent="❤️ ".repeat(lives);
+ document.getElementById("score").textContent="💎 "+score+" / 500";
+ document.getElementById("missionName").textContent=
+  "MISI "+(mission+1)+" — "+missions[mission].name;
+ document.getElementById("playerLabel").textContent=currentUser;
+}
+
+/* GERAKAN */
+function updateGame(dt){
+ if(!gameStarted)return;
+
+ const speed=235;
+ let dx=joystick.x;
+ if(keys.left)dx=-1;
+ if(keys.right)dx=1;
+
+ player.x+=dx*speed*dt;
+ player.x=Math.max(stageStart(mission)+25,Math.min(stageEnd(mission)-35,player.x));
+
+ // lompat
+ if(jumpPressed && player.ground){
+  player.vy=-410;player.ground=false;
+  jumpPressed=false;
+ }
+ if(!player.ground){
+  player.vy+=950*dt;
+  player.y+=player.vy*dt;
+  if(player.y>=groundY){
+   player.y=groundY;player.vy=0;player.ground=true;
+  }
+ }
+
+ // memanjat pokok dalam misi kedua
+ if(mission===1 && Math.abs(player.x-1510)<95 && joystick.y<-.45){
+  player.y=Math.max(225,player.y-150*dt);
+  player.ground=false;player.vy=0;
+ }
+ if(mission===1 && player.y<groundY && joystick.y>.5){
+  player.y=Math.min(groundY,player.y+150*dt);
+  if(player.y===groundY)player.ground=true;
+ }
+
+ // kamera mengikuti watak
+ cameraX=player.x-450;
+ cameraX=Math.max(0,Math.min(worldWidth-W,cameraX));
+
+ // bahaya
+ if(invulnerable>0)invulnerable-=dt;
+ let hazardX=null;
+ if(mission===0)hazardX=430;
+ if(mission===2)hazardX=2250;
+ if(mission===3)hazardX=3700+Math.sin(Date.now()/700)*55;
+ if(mission===4)hazardX=4300;
+
+ if(hazardX!==null && Math.abs(player.x-hazardX)<23 &&
+    player.y>groundY-12 && invulnerable<=0){
+  loseLife();
+ }
+
+ // warga emas mengikut pemain
+ if(mission===3 && escortStarted){
+  if(player.x>=3900){
+   completeMission();
+  }
+ }
+
+ updateHUD();
+}
+
+/* NYAWA */
+function loseLife(){
+ lives--;
+ invulnerable=1.5;
+ updateHUD();
+ if(lives<=0){
+  showMessage("💛","Cuba Lagi","Nyawa telah habis. Mari cuba misi ini sekali lagi.","ULANG MISI",restartMission);
+  speak("Tidak mengapa. Mari kita cuba sekali lagi.");
+ }else{
+  toast("Berhati-hati! Nyawa berbaki "+lives+".");
+  speak("Hati-hati ya. Cuba lagi.");
+ }
+}
+
+function restartMission(){
+ hideMessage();
+ lives=3;
+ missionStep=0;
+ hasSandal=false;
+ hasWater=false;
+ escortStarted=false;
+ player.x=stageStart(mission)+90;
+ player.y=groundY;player.vy=0;player.ground=true;
+ cameraX=Math.max(0,player.x-450);
+ invulnerable=1;
+ updateHUD();
+ speak(missions[mission].instruction);
+}
+
+/* TINDAKAN MISI */
+function action(){
+ if(!gameStarted)return;
+ const x=player.x;
+
+ if(mission===0){
+  if(Math.abs(x-700)<110){
+   completeMission();
+  }else{
+   speak("Teruskan perjalanan sehingga bertemu sahabat.");
+  }
+ }
+
+ else if(mission===1){
+  if(Math.abs(x-1510)<110 && player.y<275){
+   completeMission();
+  }else if(Math.abs(x-1510)<140){
+   speak("Gunakan joystick ke atas untuk memanjat pokok.");
+  }else{
+   speak("Cari pokok yang mempunyai kucing di atasnya.");
+  }
+ }
+
+ else if(mission===2){
+  if(!hasSandal && Math.abs(x-2500)<95){
+   hasSandal=true;missionStep=1;
+   toast("Selipar berjaya diambil! Hantar kepada sahabat.");
+   speak("Bagus! Sekarang hantar selipar kepada sahabat.");
+  }else if(hasSandal && Math.abs(x-2820)<110){
+   completeMission();
+  }else{
+   speak(hasSandal?"Cari sahabat untuk memulangkan selipar.":"Cari selipar di tepi longkang.");
+  }
+ }
+
+ else if(mission===3){
+  if(!escortStarted && Math.abs(x-3500)<120){
+   escortStarted=true;
+   speak("Terima kasih kerana membantu. Mari kita melintas bersama-sama apabila selamat.");
+   toast("Iringi warga emas ke seberang jalan.");
+  }else if(escortStarted){
+   speak("Teruskan berjalan ke kawasan selamat di seberang jalan.");
+  }else{
+   speak("Cari warga emas yang memerlukan bantuan.");
+  }
+ }
+
+ else if(mission===4){
+  if(!hasWater && Math.abs(x-4450)<120){
+   hasWater=true;missionStep=1;
+   toast("Air sudah diambil. Bawa kepada anjing.");
+   speak("Bagus! Sekarang berikan air kepada anjing yang dahaga.");
+  }else if(hasWater && Math.abs(x-4800)<120){
+   completeMission();
+  }else{
+   speak(hasWater?"Bawa air kepada anjing.":"Pergi ke perigi untuk mengambil air.");
+  }
+ }
+}
+
+/* MISI SELESAI */
+function completeMission(){
+ if(completed.includes(mission))return;
+ completed.push(mission);
+ score=Math.min(500,score+100);
+ soundSuccess();
+ updateHUD();
+ showMessage("🎉","TAHNIAH!","Kamu berjaya menyelesaikan misi dan memperoleh 100 markah.","TERUSKAN",continueMission);
+ speak("Tahniah! Kamu berjaya menyelesaikan misi ini. Kamu seorang yang baik hati.");
+}
+
+function showMessage(emoji,title,text,button,callback){
+ document.getElementById("messageEmoji").textContent=emoji;
+ document.getElementById("messageTitle").textContent=title;
+ document.getElementById("messageText").textContent=text;
+ const b=document.getElementById("messageButton");
+ b.textContent=button;
+ b.onclick=callback;
+ document.getElementById("message").style.display="block";
+}
+
+function hideMessage(){
+ document.getElementById("message").style.display="none";
+}
+
+function continueMission(){
+ hideMessage();
+ if(mission===4){
+  finishGame();
+  return;
+ }
+ mission++;
+ lives=3;
+ missionStep=0;
+ hasSandal=false;hasWater=false;escortStarted=false;
+ player.x=stageStart(mission)+90;
+ player.y=groundY;player.vy=0;player.ground=true;
+ cameraX=Math.max(0,player.x-450);
+ updateHUD();
+ speak(missions[mission].instruction);
+}
+
+function finishGame(){
+ document.getElementById("hud").style.display="none";
+ document.getElementById("controls").style.display="none";
+ document.getElementById("saveBtn").style.display="none";
+ document.getElementById("endScreen").classList.remove("hidden");
+ document.getElementById("finalScore").textContent=score+" / 500";
+ confetti();
+ speak("Alhamdulillah. Tahniah kerana berjaya menyelesaikan semua lima misi kasih sayang.");
+}
+
+/* KONFETI */
+function confetti(){
+ const colors=["#ffd45b","#f37b83","#67d8bd","#9c8af5","#ffffff"];
+ let bits=[];
+ for(let i=0;i<100;i++){
+  bits.push({
+   x:Math.random()*W,y:-Math.random()*H,
+   v:100+Math.random()*220,
+   color:colors[i%colors.length],
+   size:4+Math.random()*7
+  });
+ }
+ let start=performance.now();
+ function frame(now){
+  if(document.getElementById("endScreen").classList.contains("hidden"))return;
+  const c=document.createElement("canvas");
+  // Animasi konfeti pada skrin permainan utama melalui paparan CSS.
+  // Kanvas utama tidak diperlukan untuk menyimpan keputusan.
+  if(now-start<4500)requestAnimationFrame(frame);
+ }
+ requestAnimationFrame(frame);
+}
+
+/* TOAST */
+let toastTimer;
+function toast(t){
+ const el=document.getElementById("toast");
+ el.textContent=t;el.style.display="block";
+ clearTimeout(toastTimer);
+ toastTimer=setTimeout(()=>el.style.display="none",2600);
+}
+
+/* JOYSTICK */
+const joy=document.getElementById("joystick");
+const stick=document.getElementById("stick");
+let joyPointer=null;
+
+function setJoystick(e){
+ const r=joy.getBoundingClientRect();
+ const cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;
+ const max=r.width*.34;
+ const len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max;}
+ joystick.x=dx/max;
+ joystick.y=dy/max;
+ stick.style.transform=`translate(${dx}px,${dy}px)`;
+}
+
+function resetJoystick(){
+ joyPointer=null;joystick.x=0;joystick.y=0;
+ stick.style.transform="translate(0,0)";
+}
+joy.addEventListener("pointerdown",e=>{
+ joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);setJoystick(e);
+});
+joy.addEventListener("pointermove",e=>{
+ if(e.pointerId===joyPointer)setJoystick(e);
+});
+joy.addEventListener("pointerup",resetJoystick);
+joy.addEventListener("pointercancel",resetJoystick);
+
+/* BUTANG */
+const jumpBtn=document.getElementById("jumpBtn");
+jumpBtn.addEventListener("pointerdown",e=>{
+ e.preventDefault();jumpPressed=true;
+});
+document.getElementById("actionBtn").addEventListener("pointerdown",e=>{
+ e.preventDefault();action();
+});
+
+/* PAPAN KEKUNCI */
+let keys={left:false,right:false};
+window.addEventListener("keydown",e=>{
+ if(e.key==="ArrowLeft"||e.key==="a")keys.left=true;
+ if(e.key==="ArrowRight"||e.key==="d")keys.right=true;
+ if(e.key===" "||e.key==="ArrowUp")jumpPressed=true;
+ if(e.key==="Enter"||e.key==="e")action();
+});
+window.addEventListener("keyup",e=>{
+ if(e.key==="ArrowLeft"||e.key==="a")keys.left=false;
+ if(e.key==="ArrowRight"||e.key==="d")keys.right=false;
+});
+
+/* GELUNG PERMAINAN */
+function gameLoop(time){
+ if(!gameStarted)return;
+ const dt=Math.min(.035,(time-lastFrame)/1000||.016);
+ lastFrame=time;
+ updateGame(dt);
+ drawGame();
+ requestAnimationFrame(gameLoop);
+}
+
+/* MULA */
+drawCharacterPreviews();
+</script>
+</body>
+</html>
